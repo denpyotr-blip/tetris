@@ -105,7 +105,9 @@ const ad=(n,f)=>AL.push([n,f]);
 [1000,5000,20000].forEach(v=>ad(v+' XP',()=>P.xp>=v));[1200,1800].forEach(v=>ad('Прожил '+v/60+' минут',()=>P.st.tm>=v));
 TH.forEach((T,m)=>ad(T.n+': 3 минуты',()=>Math.max(...P.bt.slice(m*5,m*5+5))>=180));
 DN.forEach((n,d)=>ad('Сложность «'+n+'»: 2 минуты',()=>TH.some((_,m)=>P.bt[m*5+d]>=120)));
-[20,30].forEach(v=>ad('Комбо ×'+v,()=>P.st.mc>=v));ad('100 рулеток',()=>P.st.rl>=100);[10,25].forEach(v=>ad(v+' золотых блоков',()=>P.st.gold>=v));
+[20,30].forEach(v=>ad('Комбо ×'+v,()=>P.st.mc>=v));ad('100 рулеток',()=>P.st.rl>=100);ad('Чистое поле',()=>(P.st.pc||0)>=1);ad('10 чистых полей',()=>(P.st.pc||0)>=10);ad('Серия 7 дней',()=>(P.str||0)>=7);
+// Ежедневная серия: заходишь каждый день — получаешь бонус XP (до 140)
+{const d=dk(),y=new Date(Date.now()-864e5).toISOString().slice(0,10);if(P.sd!=d){P.str=P.sd==y?(P.str||0)+1:1;P.sd=d;P.sb=Math.min(P.str,7)*20;P.xp+=P.sb}else P.sb=0}[10,25].forEach(v=>ad(v+' золотых блоков',()=>P.st.gold>=v));
 ad('Все скины',()=>P.own.s.length>=4);ad('Все фоны',()=>P.own.b.length>=4);[15,20].forEach(v=>ad('Уровень игрока '+v,()=>plv()>=v));
 function chk(){AL.forEach((a,i)=>{if(!P.ac[i]&&a[1]()){P.ac[i]=1;const d=document.createElement('div');d.className='tt';d.textContent='🏆 '+a[0];$('toast').appendChild(d);setTimeout(()=>d.remove(),3100);sfx('ach')}})}
 
@@ -189,6 +191,7 @@ function lock(){const cells=[];
   flash=.25+Math.min(combo,6)*.06;fc=combo>=10?'#ffd86b':TH[M].glow;shake=Math.max(shake,[0,3,5,8,10][n]+(combo>=5?12:0));wv=0;
   sfx('clr',n);sfx('cmb',combo);if(navigator.vibrate)navigator.vibrate(n==4?[40,30,60]:20);
   if(n==4){P.st.tet++;sfx('fan');fc='#ffd86b';flash=.9;bn={txt:'ТЕТРИС!',sub:'',t:0}}
+  if(grid.every(r=>r.every(q=>!q))){score+=3000*lvl;el=100;P.st.pc=(P.st.pc||0)+1;bn={txt:'ЧИСТОЕ ПОЛЕ!',sub:'+3000 очков, стихия полна',t:0};flash=1;fc='#ffd86b';shake=20;sfx('fan');for(let i=0;i<60;i++)parts.push({x:W/2,y:fy+cs*10,vx:(Math.random()-.5)*800,vy:-Math.random()*600,c:'#ffd86b',s:5,l:1.4,m:1.4,k:'sh'})}
   if(combo>=10&&combo-n<10)bn={txt:'БЕЗУМИЕ',sub:'музыка ускорилась',t:0};
   if(boss){boss.hp-=n;if(boss.hp<=0){score+=1000*lvl;P.xp+=100;P.st.bos++;bn={txt:'БОСС ПОВЕРЖЕН',sub:'+1000 очков, +100 XP',t:0};boss=null;flash=1;fc='#ffd86b';shake=20;sfx('fan')}}
  }else if(combo>0){if(combo>=2){flash=.3;fc='#000';sfx('sad')}combo=0}
@@ -216,7 +219,7 @@ function over(){S='over';skin();$('ot').textContent=TH[M].e+' '+(rsn||OT[M])+' '
  if(rec){for(let i=0;i<80;i++)parts.push({x:W/2,y:H/2,vx:(Math.random()-.5)*900,vy:(Math.random()-.5)*900,c:'#ffd86b',s:6,l:1.6,m:1.6,k:'sh'});sfx('fan')}
  let k=0;const iv=setInterval(()=>{k+=.05;const u=Math.min(1,k),sc=Math.floor(score*u);$('rs').innerHTML=`Счёт <b>${sc}</b><br>Время <b>${fmt(t)}</b> · Линии <b>${lines}</b><br>Макс. комбо <b>×${mxc}</b><br>+${Math.floor(gx*u)} XP · ур. ${plv()}`;if(u>=1)clearInterval(iv)},30)}
 function toMenu(){S='menu';skin();['pause','over'].forEach(i=>$(i).classList.add('h'));$('pad').classList.add('h');$('menu').classList.remove('h');
- $('pl').textContent=`Игрок · уровень ${plv()} · ${P.xp} XP`;
+ $('pl').textContent=`Игрок · уровень ${plv()} · ${P.xp} XP · серия ${P.str||1} дн.`;
  $('df').innerHTML='<span style="font-size:13px;opacity:.85;margin-right:4px">Сложность:<br>'+DN[P.df]+'</span>'+DN.map((n,i)=>`<button class="ch${i==P.df?' on':''}" onclick="P.df=${i};save();toMenu()">${i+1}</button>`).join('');
  $('modes').innerHTML=TH.map((T,i)=>`<button class="m" style="--a:${T.glow};--b:${T.bg[0]};animation-delay:${.25+i*.09}s" onclick="newGame(${i},0)">${T.e} ${T.n}<small>рекорд ${fmt(P.bt[i*5+P.df])} · очки ${P.bs[i*5+P.df]}</small></button>`).join('')+`<button class="m" style="--a:#ffd86b;--b:#3a2a00" onclick="newGame(dm(),1)">📅 Челлендж дня: ${TH[dm()].n}<small>${P.dd[dk()]?'лучший счёт: '+P.dd[dk()]:'одинаковые фигуры для всех'}</small></button><button class="m" style="--a:#6f6;--b:#0a2a0a" onclick="shop()">🛒 Магазин<small>скины и фоны за XP: ${P.xp-P.sp}</small></button><button class="m" style="--a:#888;--b:#222" onclick="P.lt=(P.lt+1)%3;lite=P.lt==2;save();toMenu()">⚙ Эффекты: ${['авто','полные','lite'][P.lt]}<small>lite — меньше частиц для слабых устройств</small></button>`;
  $('ach').innerHTML=AL.map((a,i)=>`<div>${P.ac[i]?'🏆':'🔒'} ${a[0]}</div>`).join('')}
@@ -340,5 +343,6 @@ function loop(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;fa=fa*.95+dt*
  if(S=='play')upd(dt);else if(S=='roul')updRoul(dt);else if(S=='dying'){dead+=dt;if(dead>1.6)over()}
  if(S!='pause'){amb(dt);if(grid&&S!='menu'){grid.forEach(r=>r.forEach(q=>{if(q&&q.o>0){q.o*=Math.pow(.0008,dt);if(q.o<.03){q.o=0;q.a=.12}}}));fl=Math.max(0,fl-dt*1.5);if(bolt&&(bolt.t-=dt)<=0)bolt=null;gs+=dt;vx+=(cur.x-vx)*Math.min(1,dt*28);vy+=(cur.y-vy)*Math.min(1,dt*28);pops=pops.filter(p=>(p.t+=dt)<1.1);dsc+=(score-dsc)*Math.min(1,dt*8);shake*=Math.pow(.02,dt);flash=Math.max(0,flash-dt*2.5);if(wv>=0){wv+=dt/.6;if(wv>1)wv=-1}if(bn){bn.t+=dt;if(bn.t>2.4)bn=null}}}
  draw();requestAnimationFrame(loop)}
-toMenu();requestAnimationFrame(loop);
+toMenu();if(P.sb){const d=document.createElement('div');d.className='tt';d.textContent=`📅 Серия ${P.str} дн.: +${P.sb} XP`;$('toast').appendChild(d);setTimeout(()=>d.remove(),3100);P.sb=0;save()}
+requestAnimationFrame(loop);
 </script></body></html>
