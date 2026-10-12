@@ -17,6 +17,7 @@ h2{font:italic 800 clamp(32px,8vw,52px) Palatino,Georgia,serif}
 #pad{left:50%;right:auto;transform:translateX(-50%);width:min(100%,480px);display:grid;gap:8px;grid-template-columns:1.7fr .45fr 1fr 1fr 1fr;grid-template-rows:44px 64px;grid-template-areas:"bhd pb2 . bh ." "bro . bl bd br2";padding:6px 10px calc(8px + env(safe-area-inset-bottom))}
 #pad button{max-width:none;height:auto}
 #pb2{grid-area:pb2;font-size:16px}
+#pad.lf{grid-template-columns:1fr 1fr 1fr .45fr 1.7fr;grid-template-areas:". bh . pb2 bhd" "bl bd br2 . bro"}
 #pb{position:fixed;top:8px;left:8px;width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:18px;z-index:2}
 @media(pointer:coarse){#pb{display:none!important}}
 #bl{grid-area:bl}#bd{grid-area:bd}#br2{grid-area:br2}#bro{grid-area:bro;font-size:34px;background:rgba(255,200,80,.2)}#bh{grid-area:bh;font-size:20px}#bhd{grid-area:bhd;font-size:20px}
@@ -58,6 +59,7 @@ details{max-width:88vw;font-size:13px;opacity:.85}
 <h1>СТИХИИ <i>2.0</i></h1>
 <div id="pl" style="opacity:.8"></div>
 <div id="df" style="display:flex;gap:6px;align-items:center"></div><div id="modes" style="display:flex;flex-direction:column;gap:10px"></div>
+<details><summary>Лучшие забеги</summary><div id="tb"></div></details>
 <details><summary>Ачивки</summary><div id="ach"></div></details>
 <div style="font-size:12px;opacity:.6;max-width:320px">Стихия гаснет — разбивай линии, чтобы подпитывать её!<br>Свайп/стрелки — движение, тап/↑ — поворот, пробел — бросок вниз, C — запас фигуры, P — пауза</div>
 </div>
@@ -66,7 +68,7 @@ details{max-width:88vw;font-size:13px;opacity:.85}
 <button class="m" id="sb" onclick="snd()">Звук: вкл</button></div>
 <div id="shop" class="ov h"></div>
 <div id="over" class="ov h"><h2 id="ot">Конец забега</h2>
-<div id="rs" style="font-size:20px;line-height:1.6"></div><div id="rec" class="gold"></div>
+<div id="rs" style="font-size:20px;line-height:1.6"></div><div id="rec" class="gold"></div><div id="tp" style="font-size:13px;line-height:1.5;opacity:.9"></div>
 <button class="m" onclick="newGame(M,dly)">Ещё раз</button><button class="m" onclick="toMenu()">В меню</button></div>
 
 <script>
@@ -219,14 +221,16 @@ function updRoul(dt){roul.t+=dt;roul.pu*=.88;if(roul.t<3){const u=roul.t/3,p=Mat
 function die(r){if(S!='play'&&S!='roul')return;rsn=r||'';S='dying';dead=0;grid.forEach((row,y)=>row.forEach((q,x)=>q&&burst(x,y,q.c,2)));shake=22;sfx('die');$('pad').classList.add('h');$('pb').classList.add('h')}
 function over(){S='over';skin();$('ot').textContent=TH[M].e+' '+(rsn||OT[M])+' '+TH[M].e;let rec=0;const gx=Math.floor((score/10+t/2)*(1+D*.25));P.xp+=gx;P.st.ms=Math.max(P.st.ms||0,score);
  if(dly){P.dd[dk()]=Math.max(P.dd[dk()]||0,score)}else{const k=M*5+D;if(t>P.bt[k]){P.bt[k]=t;rec=1}P.bs[k]=Math.max(P.bs[k],score)}
+ const run={s:score,t:Math.floor(t),m:M,d:D,y:dly?1:0};P.top=P.top||[];P.top.push(run);P.top.sort((a,b)=>b.s-a.s);const rk=P.top.indexOf(run);P.top=P.top.slice(0,10);
+ $('tp').innerHTML='<b>Лучшие забеги</b><br>'+P.top.slice(0,5).map((r,i)=>`<span style="${i==rk?'color:#ffd86b;font-weight:700':''}">${i+1}. ${r.s} · ${fmt(r.t)} · ${TH[r.m].e} ${DN[r.d]}${r.y?' 📅':''}</span>`).join('<br>');
  chk();save();$('over').classList.remove('h');$('rec').textContent=rec?'★ НОВЫЙ РЕКОРД ВРЕМЕНИ ★':'';
  if(rec){for(let i=0;i<80;i++)parts.push({x:W/2,y:H/2,vx:(Math.random()-.5)*900,vy:(Math.random()-.5)*900,c:'#ffd86b',s:6,l:1.6,m:1.6,k:'sh'});sfx('fan')}
  let k=0;const iv=setInterval(()=>{k+=.05;const u=Math.min(1,k),sc=Math.floor(score*u);$('rs').innerHTML=`Счёт <b>${sc}</b><br>Время <b>${fmt(t)}</b> · Линии <b>${lines}</b><br>Макс. комбо <b>×${mxc}</b><br>+${Math.floor(gx*u)} XP · ур. ${plv()}`;if(u>=1)clearInterval(iv)},30)}
 function toMenu(){S='menu';skin();['pause','over'].forEach(i=>$(i).classList.add('h'));$('pad').classList.add('h');$('pb').classList.add('h');$('menu').classList.remove('h');
  $('pl').textContent=`Игрок · уровень ${plv()} · ${P.xp} XP · серия ${P.str||1} дн.`;
  $('df').innerHTML='<span style="font-size:13px;opacity:.85;margin-right:4px">Сложность:<br>'+DN[P.df]+'</span>'+DN.map((n,i)=>`<button class="ch${i==P.df?' on':''}" onclick="P.df=${i};save();toMenu()">${i+1}</button>`).join('');
- $('modes').innerHTML=TH.map((T,i)=>`<button class="m" style="--a:${T.glow};--b:${T.bg[0]};animation-delay:${.25+i*.09}s" onclick="newGame(${i},0)">${T.e} ${T.n}<small>рекорд ${fmt(P.bt[i*5+P.df])} · очки ${P.bs[i*5+P.df]}</small></button>`).join('')+`<button class="m" style="--a:#ffd86b;--b:#3a2a00" onclick="newGame(dm(),1)">📅 Челлендж дня: ${TH[dm()].n}<small>${P.dd[dk()]?'лучший счёт: '+P.dd[dk()]:'одинаковые фигуры для всех'}</small></button><button class="m" style="--a:#6f6;--b:#0a2a0a" onclick="shop()">🛒 Магазин<small>скины и фоны за XP: ${P.xp-P.sp}</small></button><button class="m" style="--a:#888;--b:#222" onclick="P.lt=(P.lt+1)%3;lite=P.lt==2;save();toMenu()">⚙ Эффекты: ${['авто','полные','lite'][P.lt]}<small>lite — меньше частиц для слабых устройств</small></button>`;
- $('ach').innerHTML=AL.map((a,i)=>`<div>${P.ac[i]?'🏆':'🔒'} ${a[0]}</div>`).join('')}
+ $('modes').innerHTML=TH.map((T,i)=>`<button class="m" style="--a:${T.glow};--b:${T.bg[0]};animation-delay:${.25+i*.09}s" onclick="newGame(${i},0)">${T.e} ${T.n}<small>рекорд ${fmt(P.bt[i*5+P.df])} · очки ${P.bs[i*5+P.df]}</small></button>`).join('')+`<button class="m" style="--a:#ffd86b;--b:#3a2a00" onclick="newGame(dm(),1)">📅 Челлендж дня: ${TH[dm()].n}<small>${P.dd[dk()]?'лучший счёт: '+P.dd[dk()]:'одинаковые фигуры для всех'}</small></button><button class="m" style="--a:#6f6;--b:#0a2a0a" onclick="shop()">🛒 Магазин<small>скины и фоны за XP: ${P.xp-P.sp}</small></button><button class="m" style="--a:#888;--b:#222" onclick="P.lt=(P.lt+1)%3;lite=P.lt==2;save();toMenu()">⚙ Эффекты: ${['авто','полные','lite'][P.lt]}<small>lite — меньше частиц для слабых устройств</small></button><button class="m" style="--a:#888;--b:#222" onclick="P.lf=P.lf?0:1;save();applyLf();toMenu()">🖐 Кнопки: ${P.lf?'для левши':'для правши'}<small>расположение кнопок на телефоне</small></button>`;
+ $('ach').innerHTML=AL.map((a,i)=>`<div>${P.ac[i]?'🏆':'🔒'} ${a[0]}</div>`).join('');$('tb').innerHTML=(P.top||[]).map((r,i)=>`<div>${i+1}. ${r.s} · ${fmt(r.t)} · ${TH[r.m].e} ${DN[r.d]}${r.y?' 📅':''}</div>`).join('')||'пока пусто'}
 // Магазин: скины блоков и фоны за XP (баланс = XP − потрачено)
 function shop(){$('menu').classList.add('h');const o=$('shop');o.classList.remove('h');
  const row=(L,k,own,cur)=>L.map((x,i)=>`<button class="m" style="--a:${cur==i?'#ffd86b':own.includes(i)?'#6f6':'#888'}" onclick="buy('${k}',${i})">${x[0]}<small>${cur==i?'выбрано':own.includes(i)?'выбрать':x[1]+' XP'}</small></button>`).join('');
@@ -235,6 +239,7 @@ function buy(k,i){const L=k=='s'?SK:BG,own=P.own[k];if(!own.includes(i)){if(P.xp
 function closeShop(){$('shop').classList.add('h');toMenu()}
 // Каждый экран оформляется под стихию: цвет свечения, заголовок, эмодзи
 const PT=['Костёр тлеет','Прилив замер','Мороз сковал','Тьма ждёт','Ветер замер','Гроза копит силу'],OT=['Костёр потух','Тебя смыло волной','Ты замёрз','Свет погас','Ветер стих','Заряд иссяк'];
+function applyLf(){$('pad').classList.toggle('lf',!!P.lf)}
 function skin(){document.documentElement.style.setProperty('--g',TH[M].glow)}
 function pause(){if(S=='play'){S='pause';$('pst').innerHTML=`Счёт ${score} · Ур. ${lvl}<br>Время ${fmt(t)} · линий ${lines}`;skin();$('pt').textContent=TH[M].e+' '+PT[M]+' '+TH[M].e;$('pause').classList.remove('h')}}
 function resume(){if(S=='pause'){S='play';$('pause').classList.add('h')}}
@@ -347,6 +352,6 @@ function loop(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;fa=fa*.95+dt*
  if(S=='play')upd(dt);else if(S=='roul')updRoul(dt);else if(S=='dying'){dead+=dt;if(dead>1.6)over()}
  if(S!='pause'){amb(dt);if(grid&&S!='menu'){grid.forEach(r=>r.forEach(q=>{if(q&&q.o>0){q.o*=Math.pow(.0008,dt);if(q.o<.03){q.o=0;q.a=.12}}}));fl=Math.max(0,fl-dt*1.5);if(bolt&&(bolt.t-=dt)<=0)bolt=null;gs+=dt;vx+=(cur.x-vx)*Math.min(1,dt*28);vy+=(cur.y-vy)*Math.min(1,dt*28);pops=pops.filter(p=>(p.t+=dt)<1.1);dsc+=(score-dsc)*Math.min(1,dt*8);shake*=Math.pow(.02,dt);flash=Math.max(0,flash-dt*2.5);if(wv>=0){wv+=dt/.6;if(wv>1)wv=-1}if(bn){bn.t+=dt;if(bn.t>2.4)bn=null}}}
  draw();requestAnimationFrame(loop)}
-toMenu();if(P.sb){const d=document.createElement('div');d.className='tt';d.textContent=`📅 Серия ${P.str} дн.: +${P.sb} XP`;$('toast').appendChild(d);setTimeout(()=>d.remove(),3100);P.sb=0;save()}
+applyLf();toMenu();if(P.sb){const d=document.createElement('div');d.className='tt';d.textContent=`📅 Серия ${P.str} дн.: +${P.sb} XP`;$('toast').appendChild(d);setTimeout(()=>d.remove(),3100);P.sb=0;save()}
 requestAnimationFrame(loop);
 </script></body></html>
