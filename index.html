@@ -231,7 +231,7 @@ function soft(){if(S=='play'&&!hit(cur.m,cur.x,cur.y+1)){cur.y++;acc=0;score+=1}
 function hard_(){if(S!='play')return;const y0=cur.y;while(!hit(cur.m,cur.x,cur.y+1)){cur.y++;score+=2}
  for(let i=0;i<cur.m[0].length;i++)if(cur.m.some(r=>r[i]))parts.push({x:fx+(cur.x+i)*cs,y:fy+y0*cs,vx:0,vy:0,w:cs,h:(cur.y-y0)*cs+cs*2,c:TH[M].glow,l:.28,m:.28,s:0,k:'t'});zm=.012;lock()}
 function pop(txt,x,y,c,s){pops.push({txt,x,y,c,s,t:0})}
-function burst(x,y,c,n=5){const col=TH[M].col[c]||'#777';if(lite)n=Math.ceil(n/2);for(let i=0;i<n;i++)parts.push({x:fx+(x+.5)*cs,y:fy+(y+.5)*cs,vx:(Math.random()-.5)*420,vy:-Math.random()*380,c:col,s:cs*.28,l:1,m:1,k:'sh'});if(parts.length>600)parts.splice(0,100)}
+function burst(x,y,c,n=5){const col=TH[M].col[c]||'#777';n=Math.max(1,Math.ceil(n*FXK()/.7*(lite?.5:1)));for(let i=0;i<n;i++)parts.push({x:fx+(x+.5)*cs,y:fy+(y+.5)*cs,vx:(Math.random()-.5)*420,vy:-Math.random()*380,c:col,s:cs*.28,l:1,m:1,k:'sh'});if(parts.length>600)parts.splice(0,100)}
 
 // --- Фиксация фигуры, спец-блоки, линии, комбо ---
 function lock(){const cells=[];
@@ -246,7 +246,7 @@ function lock(){const cells=[];
    if(row.some(q=>q.f)){row.forEach(q=>q.f=0);sfx('ice');continue}   // лёд: сначала тает
    parts.push({x:fx,y:fy+y*cs,vx:0,vy:0,c:'#fff',s:0,l:.35,m:.35,k:'f'});cyr=y;row.forEach((q,x)=>{burst(x,y,q.c);if(q.g)gd=1});grid.splice(y,1);grid.unshift(Array(10).fill(0));n++;y++}}if(n>n0){settle();more=1}else more=0}   // цепная реакция: после падения могут собраться новые линии
  if(pass>2){pop('ЦЕПНАЯ РЕАКЦИЯ ×'+(pass-2),fx+cs*5,fy+8*cs,'#fff',1.3);score+=300*lvl*(pass-2);shake=Math.max(shake,12)}
- if(n){el=Math.min(100,el+((V==1||V==3)?14*n+(n==4?10:0):6*n+(n==4?6:0)));fl=1;hs=.04+.025*n;zm=.01+.012*n;combo++;mxc=Math.max(mxc,combo);P.st.mc=Math.max(P.st.mc,combo);qa('mc',combo,1);qa('lin',n);const mu=combo>=10?10:combo>=5?5:combo>=3?3:combo>=2?2:1;
+ if(n){el=Math.min(100,el+((V==1||V==3)?14*n+(n==4?10:0):6*n+(n==4?6:0)));fl=1;hs=(.04+.025*n)*FXK();zm=.01+.012*n;combo++;mxc=Math.max(mxc,combo);P.st.mc=Math.max(P.st.mc,combo);qa('mc',combo,1);qa('lin',n);const mu=combo>=10?10:combo>=5?5:combo>=3?3:combo>=2?2:1;
   let pts=[0,100,300,500,800][n]*mu*lvl*(sr>0?2:1);if(gd){pts+=1000*lvl;P.st.gold++;bn={txt:'ЗОЛОТОЙ БЛОК ×10',sub:'',t:0};for(let i=0;i<40;i++)parts.push({x:fx+cs*5,y:fy+cyr*cs,vx:(Math.random()-.5)*600,vy:-Math.random()*700,c:'#ffd24a',s:cs*.3,l:1.2,m:1.2,k:'sh'})}
   score+=pts;pop('+'+pts,fx+cs*5,fy+cyr*cs,mu>1?'#ffd86b':'#fff',1+mu*.1);if(mu>1)pop('×'+mu+' КОМБО',fx+cs*5,fy+cyr*cs-cs*1.6,TH[M].glow,1.4);parts.push({x:fx+cs*5,y:fy+cyr*cs,vx:0,vy:0,c:TH[M].glow,s:cs,l:.6,m:.6,k:'g',w:8});const old=Math.floor(lines/10);lines+=n;const lo=lvl;lvl=1+Math.floor(lines/10);if(lvl>lo)bn={txt:'УРОВЕНЬ '+lvl,sub:'скорость растёт',t:0};pend+=Math.floor(lines/10)-old;P.st.lin+=n;
   flash=.25+Math.min(combo,6)*.06;fc=combo>=10?'#ffd86b':TH[M].glow;shake=Math.max(shake,[0,3,5,8,10][n]+(combo>=5?12:0));wv=0;
@@ -336,6 +336,7 @@ function eDone(){ed=0;$('ebar').style.display='none';const p=$('pad');p.classLis
 function editPad(){ed=1;$('set').classList.add('h');$('pad').classList.remove('pv');$('pad').classList.add('ed');ebar()}
 function ebar(){let b=$('ebar');if(!b){b=document.createElement('div');b.id='ebar';document.body.appendChild(b)}b.style.display='block';PB.forEach(i=>$(i).classList.toggle('sel',i==sel));const s=(P.bp&&P.bp[sel]&&P.bp[sel].s)||1;
  b.innerHTML=`<div>Перетаскивай кнопки пальцем. Выбрана: <b>${NM[sel]}</b></div><input type="range" min="60" max="180" value="${Math.round(s*100)}" oninput="esz(this.value/100)" style="width:100%;touch-action:pan-x;accent-color:#ffd86b;margin-top:6px"><div class="eb"><button onclick="eReset()">Сбросить</button><button class="ok" onclick="eDone()">Готово</button></div>`}
+const FXK=()=>[.4,.7,1][P.fx==null?(matchMedia('(prefers-reduced-motion:reduce)').matches?0:1):P.fx];   // 0 спокойно, 1 обычно, 2 богато
 function vib(a){if(P.vb!==0&&navigator.vibrate)navigator.vibrate(a)}
 // Экранные кнопки: авто (скрыты, если есть мышь), всегда показывать или скрыть
 function padOn(){try{return P.pb==1||(P.pb!=2&&!matchMedia('(pointer:fine)').matches)}catch(e){return !matchMedia('(pointer:fine)').matches}}
@@ -355,6 +356,7 @@ function setUI(f){sf=f||0;$('menu').classList.add('h');$('pause').classList.add(
  const sg=(k,L,cur)=>`<div class="sg">${L.map((t,i)=>`<button class="${cur==i?'on':''}" onclick="sv('${k}',${i})">${t}</button>`).join('')}</div>`,
  sl=(k,a,b,v)=>`<span class="sv">${v}%</span><input type="range" min="${a}" max="${b}" value="${v}" oninput="sv('${k}',+this.value,1);this.previousElementSibling.textContent=this.value+'%'" style="width:100%;touch-action:pan-x;accent-color:#ffd86b;margin-top:8px">`;
  o.innerHTML=`<button class="bk" onclick="setBack()">← Назад</button><div class="hh"><h2>Настройки</h2><i>внизу — живой предпросмотр кнопок</i></div><div class="hl">
+ <div class="hc2"><b>Интенсивность эффектов</b>${sg('fx',['Спокойно','Обычно','Богато'],P.fx==null?(FXK()==.4?0:1):P.fx)}<div style="font-size:12px;opacity:.6;margin-top:6px">Меньше вспышек, тряски и частиц — игра спокойнее для глаз</div></div>
  <div class="hc2"><b>Экранные кнопки</b>${sg('pb',['Авто','Показывать','Скрыть'],P.pb||0)}<div style="font-size:12px;opacity:.6;margin-top:6px">Если кнопок нет в игре — выбери «Показывать»</div></div>
  <div class="hc2"><b>Расположение</b>${sg('lf',['Для правши','Для левши'],P.lf?1:0)}</div>
  ${`<button class="m" style="--a:#ffd86b;--b:#3a2a00" onclick="editPad()">✋ Расставить кнопки вручную<small>перетаскивай и меняй размер каждой</small></button>`}
@@ -362,8 +364,9 @@ function setUI(f){sf=f||0;$('menu').classList.add('h');$('pause').classList.add(
  <div class="hc2"><b>Размер кнопок</b>${sl('ps',70,130,Math.round((P.ps||1)*100))}</div>
  <div class="hc2"><b>Прозрачность кнопок</b>${sl('po',30,100,Math.round((P.po||1)*100))}</div>
  <div class="hc2"><b>Чувствительность свайпа</b>${sg('sn',['Низкая','Средняя','Высокая'],P.sn==null?1:P.sn)}</div>
+ 
  <div class="hc2"><b>Вибрация</b>${sg('vb',['Вкл','Выкл'],P.vb===0?1:0)}</div>
- <button class="m" style="--a:#ff7a6a;--b:#2a0c0a;margin-top:6px" onclick="P.lf=0;P.sw2=0;P.bp=null;P.ps=1;P.po=1;P.vb=1;P.sn=1;save();applySet();setUI(sf)">Сбросить настройки</button></div>`}
+ <button class="m" style="--a:#ff7a6a;--b:#2a0c0a;margin-top:6px" onclick="P.lf=0;P.sw2=0;P.bp=null;P.fx=1;P.ps=1;P.po=1;P.vb=1;P.sn=1;save();applySet();setUI(sf)">Сбросить настройки</button></div>`}
 function setBack(){$('set').classList.add('h');const p=$('pad');p.classList.remove('pv');if(sh)p.classList.add('h');$(sf?'pause':'menu').classList.remove('h')}
 function skin(){document.documentElement.style.setProperty('--g',TH[M].glow)}
 function pause(){if(S=='play'){S='pause';$('vol').value=P.vol==null?50:P.vol;$('skb').textContent='🎨 Дизайн кубиков: '+SK[P.sk][0];$('pst').innerHTML=`<span class="ch2">⭐ ${score}</span><span class="ch2">Ур. ${lvl}</span><span class="ch2">⏱ ${fmt(t)}</span><span class="ch2">Линий ${lines}</span>`;skin();$('pt').textContent=TH[M].e+' '+PT[M]+' '+TH[M].e;$('pause').classList.remove('h')}}
@@ -415,7 +418,7 @@ function amb(dt){const T=Math.random,k=lite?.4:1,mm=S=='menu'?Math.floor(perform
  if(grid&&S!='menu'){const kk=Math.min(1,el/100+fl*.25);
   if(M==0)for(let i=0,n=Math.floor((lite?.5:1)*(.7+2*kk)*dt*60+T());i<n;i++){const L=.35+T()*.35;parts.push({x:fx+T()*cs*10,y:fy+cs*20+cs*.2,vx:(T()-.5)*cs*1.5,vy:-(cs*2+T()*cs*3)*(.4+.6*kk),c:'#fff',s:cs*(.4+T()*.5)*(.4+.5*kk),l:L,m:L,k:'fl'})}
   if(M==1&&T()<dt*14)parts.push({x:fx+T()*cs*10,y:fy+cs*20,vx:0,vy:-(30+T()*50),c:'rgba(200,240,255,.8)',s:1.5+T()*3,l:3,m:3,k:'b'})}
- if(T()<dt*22*k){const x=T()*W;
+ if(T()<dt*22*k*FXK()/.7){const x=T()*W;
   if(mm==0)parts.push({x,y:H+5,vx:(T()-.5)*40,vy:-50-T()*90,c:'#ff9a3c',s:1.5+T()*2.5,l:3.5,m:3.5,k:'e'});
   if(mm==1)parts.push({x,y:H+5,vx:0,vy:-30-T()*40,c:'rgba(160,225,255,.8)',s:2+T()*5,l:5,m:5,k:'b'});
   if(mm==2)parts.push({x,y:-5,vx:(T()-.5)*30,vy:30+T()*40,c:'#fff',s:1.5+T()*2.5,l:7,m:7,k:'e'});
@@ -534,21 +537,22 @@ function bgx(){const k=P.bk,n=performance.now()/1000;if(k==0)scene(n*1000);if(k=
 function draw(){const T=TH[M],now=performance.now();
  let gr=BGC[M];if(!gr){gr=BGC[M]=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,T.bg[0]);gr.addColorStop(1,T.bg[1])}g.fillStyle=gr;/* градиенты кэшируются */g.fillRect(0,0,W,H);bgx();vig();
  if(S=='menu'||!grid){rain(now);drawP();return}
- g.save();if(zm>.001){g.translate(W/2,H/2);g.scale(1+zm,1+zm);g.translate(-W/2,-H/2)}if(gs<.9){const u=1-Math.pow(1-gs/.9,3);g.translate(W/2,H/2+(1-u)*H*.5);g.scale(.7+.3*u,.7+.3*u);g.translate(-W/2,-H/2)}if(shake>.5)g.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+ g.save();if(zm>.001){g.translate(W/2,H/2);g.scale(1+zm*FXK(),1+zm*FXK());g.translate(-W/2,-H/2)}if(gs<.9){const u=1-Math.pow(1-gs/.9,3);g.translate(W/2,H/2+(1-u)*H*.5);g.scale(.7+.3*u,.7+.3*u);g.translate(-W/2,-H/2)}if(shake>.5){const sk=shake*FXK();g.translate((Math.random()-.5)*sk,(Math.random()-.5)*sk)}
  g.save();g.shadowColor=T.glow;g.shadowBlur=lite?0:18+6*Math.sin(now/700);g.fillStyle='rgba(6,6,10,.6)';rr(fx-6,fy-6,cs*10+12,cs*20+12,12);g.fill();g.restore();   // стеклянная рамка поля, «дышит»
  {const fg=g.createLinearGradient(0,fy,0,fy+cs*20);fg.addColorStop(0,'rgba(0,0,0,.45)');fg.addColorStop(1,T.bg[0]+'cc');g.fillStyle=fg;g.fillRect(fx,fy,cs*10,cs*20)}   // фон поля подкрашен под стихиюg.strokeStyle='rgba(255,255,255,.05)';g.lineWidth=1;
  for(let i=0;i<=10;i++){g.beginPath();g.moveTo(fx+i*cs,fy);g.lineTo(fx+i*cs,fy+cs*20);g.stroke()}for(let i=0;i<=20;i++){g.beginPath();g.moveTo(fx,fy+i*cs);g.lineTo(fx+cs*10,fy+i*cs);g.stroke()}
  g.strokeStyle=combo>=10?`hsl(${(now/3)%360},90%,60%)`:T.glow;g.lineWidth=combo>=5?4:2;g.strokeRect(fx-1,fy-1,cs*10+2,cs*20+2);
- grid.forEach((row,y)=>row.forEach((q,x)=>{if(q){const b=q.a>0?Math.sin(q.a/.18*Math.PI*2.2)*(q.a/.18)*.22*cs:0;cellD(fx+x*cs-b/2,fy+(y-(q.o||0))*cs-b/2,cs+b,q.c,q)}}));   // bounce при фиксации
+ grid.forEach((row,y)=>row.forEach((q,x)=>{if(q){const b=q.a>0?Math.sin(q.a/.18*Math.PI*2.2)*(q.a/.18)*.22*cs:0;{const px=fx+x*cs-b/2,py=fy+(y-(q.o||0))*cs-b/2;cellD(px,py,cs+b,q.c,q);if(q.a>0){g.globalCompositeOperation='lighter';g.globalAlpha=Math.min(.3,q.a/.18*.3);g.fillStyle='#fff';g.fillRect(px+2,py+2,cs+b-4,cs+b-4);g.globalCompositeOperation='source-over';g.globalAlpha=1}}   /* вспышка света при посадке */}}));   // bounce при фиксации
  const uu=Math.min(1,(now-spT)/200),ob=uu>=1?1:1+2.70158*Math.pow(uu-1,3)+1.70158*Math.pow(uu-1,2);   // появление фигуры с перелётом (easeOutBack)
  if(S=='play'){let gy=cur.y;while(!hit(cur.m,cur.x,gy+1))gy++;
-  cur.m.forEach((r,j)=>r.forEach((v,i)=>{if(v){g.globalAlpha=.22;g.drawImage(spriteOf(TH[M].col[v.c]||'#777',P.sk),fx+(cur.x+i)*cs,fy+(gy+j)*cs,cs,cs);g.globalAlpha=1;cellD(fx+vx*cs+i*cs+cs*(1-ob)/2,fy+vy*cs+j*cs+cs*(1-ob)/2,cs*ob,v.c,v)}}))}
+  cur.m.forEach((r,j)=>r.forEach((v,i)=>{if(v){g.globalAlpha=.22;g.drawImage(spriteOf(TH[M].col[v.c]||'#777',P.sk),fx+(cur.x+i)*cs,fy+(gy+j)*cs,cs,cs);g.globalAlpha=1;g.globalCompositeOperation='lighter';g.globalAlpha=.1;const hd2=cs*2.2;g.drawImage(spr(TC[M]),fx+vx*cs+i*cs-(hd2-cs)/2,fy+vy*cs+j*cs-(hd2-cs)/2,hd2,hd2);g.globalAlpha=1;g.globalCompositeOperation='source-over';
+   cellD(fx+vx*cs+i*cs+cs*(1-ob)/2,fy+vy*cs+j*cs+cs*(1-ob)/2,cs*ob,v.c,v)}}))}
  envfx(now);tgd(now);if(wv>=0){const y=fy+cs*20*(1-wv);const w=g.createLinearGradient(0,y-cs*2,0,y+cs*2);w.addColorStop(0,'rgba(255,255,255,0)');w.addColorStop(.5,'rgba(255,255,255,.35)');w.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=w;g.fillRect(fx,y-cs*2,cs*10,cs*4)}   // волна света
  if(boss&&boss.eff>0&&M==1){const h=cs*6+Math.sin(now/300)*4;g.fillStyle='rgba(40,140,255,.6)';g.fillRect(fx,fy+cs*20-h,cs*10,h)}
  if(boss&&boss.eff>0&&M==3&&cur){const cx=fx+(cur.x+cur.m[0].length/2)*cs,cy=fy+(cur.y+1)*cs,rg=g.createRadialGradient(cx,cy,cs,cx,cy,cs*5);rg.addColorStop(0,'rgba(0,0,0,0)');rg.addColorStop(1,'rgba(0,0,0,.96)');g.fillStyle=rg;g.fillRect(fx,fy,cs*10,cs*20)}
  if(beam){const by=fy+(beam.y+.5)*cs,u=beam.t/.4,gr=g.createLinearGradient(0,by-cs,0,by+cs);gr.addColorStop(0,'rgba(120,230,255,0)');gr.addColorStop(.5,`rgba(255,255,255,${u})`);gr.addColorStop(1,'rgba(120,230,255,0)');g.globalCompositeOperation='lighter';g.fillStyle=gr;g.fillRect(0,by-cs*(.5+.8*(1-u)),W,cs*(1+1.6*(1-u)));g.globalCompositeOperation='source-over'}   // луч лазера
  drawP();g.restore();
- if(flash>0){g.globalAlpha=Math.min(.7,flash*.6);g.fillStyle=fc;g.fillRect(0,0,W,H);g.globalAlpha=1}
+ if(flash>0){g.globalAlpha=Math.min(.5,flash*.6)*FXK();g.fillStyle=fc;g.fillRect(0,0,W,H);g.globalAlpha=1}
  // HUD: счёт, уровень, время, следующая фигура, шкала комбо, полоска босса
  rr(fx-6,3,cs*10+12,78,12);g.fillStyle='rgba(255,255,255,.07)';g.fill();g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=1;g.stroke();   // стеклянная панель HUD
  g.textBaseline='alphabetic';g.fillStyle='#fff';g.textAlign='left';g.font=`italic 900 ${Math.min(28,cs*.95)*(1+spp*.3)}px Palatino,Georgia,serif`;g.fillText(Math.floor(dsc),fx,26);
@@ -565,7 +569,7 @@ function draw(){const T=TH[M],now=performance.now();
  if(intro)introfx(now);
  if(bn){const a=bn.t<.3?bn.t/.3:bn.t>2?(2.4-bn.t)/.4:1,sc=1+Math.max(0,.4-bn.t)*3;g.save();g.globalAlpha=Math.max(0,a);g.translate(W/2,H*.38);g.scale(sc,sc);g.textAlign='center';g.fillStyle='#fff';g.shadowColor=T.glow;g.shadowBlur=24;g.font=`italic 900 ${Math.min(44,W/9)}px Palatino,Georgia,serif`;g.fillText(bn.txt,0,0);g.shadowBlur=0;g.font=`600 ${Math.min(18,W/22)}px system-ui`;g.fillText(bn.sub,0,30);g.restore()}
  if(roul){g.fillStyle='rgba(0,0,0,.75)';g.fillRect(0,H*.3,W,H*.28);g.textAlign='center';g.fillStyle='#ffd86b';g.font='700 18px system-ui';g.fillText('РУЛЕТКА БОНУСОВ',W/2,H*.3+34);g.fillStyle='#fff';g.font=`900 ${Math.min(40,W/9)*(1+roul.pu*.3)}px system-ui`;g.fillText(RI[roul.i][0],W/2,H*.3+90);if(roul.done){g.fillStyle='#ffd86b';g.font='700 16px system-ui';g.fillText('ВЫПАЛО!',W/2,H*.3+120)}}}
-function drawP(){for(const p of parts){g.globalAlpha=Math.max(0,Math.min(1,p.l/p.m));g.fillStyle=g.strokeStyle=p.c;if(p.k=='sh')g.fillRect(p.x,p.y,p.s,p.s);else if(p.k=='f')g.fillRect(p.x,p.y,cs*10,cs);else if(p.k=='fl'){const u=1-p.l/p.m,d=p.s*(1.2-u*.5)*2;g.globalCompositeOperation='lighter';g.globalAlpha=(1-u)*(u>.8?.2:.5);g.drawImage(spr(FC[u<.25?0:u<.55?1:u<.8?2:3]),p.x-d/2,p.y-d/2,d,d);g.globalCompositeOperation='source-over'}else if(p.k=='fy'){g.globalCompositeOperation='lighter';g.globalAlpha=Math.min(1,p.l/p.m*1.5);g.drawImage(spr(TC[M]),p.x-p.s/2,p.y-p.s/2,p.s,p.s);g.globalCompositeOperation='source-over'}else if(p.k=='t'){g.globalAlpha=p.l/p.m*.35;g.fillRect(p.x,p.y,p.w,p.h)}else if(p.k=='g'){g.lineWidth=3;g.beginPath();g.arc(p.x,p.y,p.s+(1-p.l/p.m)*cs*(p.w||6),0,7);g.stroke()}else if(p.k=='b'){g.lineWidth=1;g.beginPath();g.arc(p.x,p.y,p.s,0,7);g.stroke()}else{g.beginPath();g.arc(p.x,p.y,p.s,0,7);g.fill()}}g.globalAlpha=1}
+function drawP(){for(const p of parts){g.globalAlpha=Math.max(0,Math.min(1,p.l/p.m));g.fillStyle=g.strokeStyle=p.c;if(p.k=='sh')g.fillRect(p.x,p.y,p.s,p.s);else if(p.k=='f'){const u=1-p.l/p.m,gx=p.x+(u*1.4-.2)*cs*10,q=g.createLinearGradient(gx-cs*3,0,gx+cs*3,0);q.addColorStop(0,'rgba(255,255,255,0)');q.addColorStop(.5,'rgba(255,255,255,.85)');q.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=q;g.fillRect(p.x,p.y,cs*10,cs)}   /* волна света по очищенной линии */else if(p.k=='fl'){const u=1-p.l/p.m,d=p.s*(1.2-u*.5)*2;g.globalCompositeOperation='lighter';g.globalAlpha=(1-u)*(u>.8?.2:.5);g.drawImage(spr(FC[u<.25?0:u<.55?1:u<.8?2:3]),p.x-d/2,p.y-d/2,d,d);g.globalCompositeOperation='source-over'}else if(p.k=='fy'){g.globalCompositeOperation='lighter';g.globalAlpha=Math.min(1,p.l/p.m*1.5);g.drawImage(spr(TC[M]),p.x-p.s/2,p.y-p.s/2,p.s,p.s);g.globalCompositeOperation='source-over'}else if(p.k=='t'){g.globalAlpha=p.l/p.m*.35;g.fillRect(p.x,p.y,p.w,p.h)}else if(p.k=='g'){g.lineWidth=3;g.beginPath();g.arc(p.x,p.y,p.s+(1-p.l/p.m)*cs*(p.w||6),0,7);g.stroke()}else if(p.k=='b'){g.lineWidth=1;g.beginPath();g.arc(p.x,p.y,p.s,0,7);g.stroke()}else{g.beginPath();g.arc(p.x,p.y,p.s,0,7);g.fill()}}g.globalAlpha=1}
 
 // --- Главный цикл ---
 function loop(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;fa=fa*.95+dt*.05;if(fa>.026&&!lite&&!P.lt&&ts>4000){lite=true;rs()}   // авто lite-режим на слабых устройствах
